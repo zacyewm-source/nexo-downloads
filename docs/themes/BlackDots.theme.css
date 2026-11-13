@@ -1,0 +1,568 @@
+/**
+ * @name نقاط — Black Dots
+ * @author MM_7GG_
+ * @version 1.2.0
+ * @description خلفية ديسكورد سوداء بالكامل مع نقاط بيضاء تتحرك بوضوح في الخلفية (يشمل الشات والخاص والمجموعات). يعمل على BetterDiscord و Vencord.
+ * @source https://nexo-mm7gg.netlify.app/themes/BlackDots.theme.css
+ */
+
+/* ── Canvas + clearly drifting white dots ──
+   What was wrong:
+   - Dots lived on #app-mount::before/::after at z-index 0, but every child
+     was lifted with z-index 1, so the layer sat behind opaque Discord chrome.
+   - Surfaces were solid #000 or 72% black, so any visible dots barely showed.
+   - Animation used background-position over 90–140s and only moved one tiny
+     tile (~26px), which looks static. prefers-reduced-motion also killed it.
+   Fix: paint black + dots on body (always present), animate with GPU
+   transform (seamless tile loop, 24–48s), and keep app/DM chrome transparent
+   so the same moving field shows through chat, sidebars, and DMs/groups.
+*/
+html {
+  background-color: #000 !important;
+}
+
+body,
+#app-mount,
+#app-mount > * {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+body::before,
+body::after {
+  content: "" !important;
+  position: fixed !important;
+  top: -50vh !important;
+  left: -50vw !important;
+  width: 200vw !important;
+  height: 200vh !important;
+  pointer-events: none !important;
+  display: block !important;
+  z-index: 0 !important;
+  background-repeat: repeat !important;
+  background-color: transparent !important;
+  will-change: transform !important;
+  animation-timing-function: linear !important;
+  animation-iteration-count: infinite !important;
+  animation-play-state: running !important;
+}
+
+/* Layer 1: sparse white dots on black, diagonal drift */
+body::before {
+  z-index: 0 !important;
+  background-color: #000 !important;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.9) 1.15px, transparent 1.4px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.5) 0.9px, transparent 1.15px);
+  background-size: 120px 120px, 180px 180px !important;
+  background-position: 0 0, 70px 50px !important;
+  animation-name: blackDotsDriftA !important;
+  animation-duration: 28s !important;
+}
+
+/* Layer 2: even sparser, slower, opposite direction */
+body::after {
+  z-index: 0 !important;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.65) 0.95px, transparent 1.2px);
+  background-size: 160px 160px !important;
+  background-position: 40px 90px !important;
+  animation-name: blackDotsDriftB !important;
+  animation-duration: 48s !important;
+}
+
+#app-mount {
+  position: relative !important;
+  z-index: 1 !important;
+  isolation: auto !important;
+  background-color: transparent !important;
+}
+
+/* Seamless loop: travel an exact multiple of the tile size */
+@keyframes blackDotsDriftA {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-360px, -360px, 0); } /* LCM of 120 and 180 */
+}
+
+@keyframes blackDotsDriftB {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(320px, -320px, 0); } /* 2×160px, opposite */
+}
+
+/* ── Color tokens: black surfaces, light text, visible accents ── */
+:root,
+.theme-dark,
+.theme-light,
+.visual-refresh,
+html,
+body {
+  --black-dots-bg: #000;
+  --black-dots-bg-soft: rgba(0, 0, 0, 0.28);
+  --black-dots-bg-solid: #000;
+  --black-dots-hover: rgba(255, 255, 255, 0.07);
+  --black-dots-selected: rgba(255, 255, 255, 0.12);
+  --black-dots-border: rgba(255, 255, 255, 0.16);
+  --black-dots-text: #f4f4f4;
+  --black-dots-muted: #b8b8b8;
+  --black-dots-link: #b7ddff;
+
+  /* Classic / long-lived background tokens */
+  --background-primary: var(--black-dots-bg-soft) !important;
+  --background-secondary: var(--black-dots-bg-soft) !important;
+  --background-secondary-alt: var(--black-dots-bg-soft) !important;
+  --background-tertiary: var(--black-dots-bg-soft) !important;
+  --background-accent: rgba(0, 0, 0, 0.28) !important;
+  --background-floating: #000 !important;
+  --background-nested-floating: #000 !important;
+  --background-mobile-primary: var(--black-dots-bg-soft) !important;
+  --background-mobile-secondary: var(--black-dots-bg-soft) !important;
+  --background-modifier-hover: var(--black-dots-hover) !important;
+  --background-modifier-active: var(--black-dots-selected) !important;
+  --background-modifier-selected: var(--black-dots-selected) !important;
+  --background-modifier-accent: var(--black-dots-border) !important;
+  --background-mentioned: rgba(255, 255, 255, 0.10) !important;
+  --background-mentioned-hover: rgba(255, 255, 255, 0.16) !important;
+  --background-message-hover: rgba(255, 255, 255, 0.04) !important;
+  --background-message-automod: rgba(237, 66, 69, 0.16) !important;
+  --background-message-highlight: rgba(255, 255, 255, 0.12) !important;
+  --background-code: rgba(0, 0, 0, 0.55) !important;
+  --channeltextarea-background: rgba(0, 0, 0, 0.62) !important;
+  --input-background: rgba(0, 0, 0, 0.62) !important;
+  --input-placeholder-text: #8a8a8a !important;
+  --deprecated-card-bg: rgba(0, 0, 0, 0.28) !important;
+  --deprecated-card-editable-bg: rgba(0, 0, 0, 0.28) !important;
+  --deprecated-store-bg: transparent !important;
+  --deprecated-text-input-bg: rgba(0, 0, 0, 0.62) !important;
+  --activity-card-background: rgba(0, 0, 0, 0.28) !important;
+  --home-background: transparent !important;
+  --chat-background: transparent !important;
+  --chat-background-default: transparent !important;
+  --chat-border: var(--black-dots-border) !important;
+  --modal-background: #000 !important;
+  --modal-footer-background: #000 !important;
+  --search-popout-option-fade: transparent !important;
+  --search-popout-option-fade-hover: rgba(0, 0, 0, 0.4) !important;
+  --guild-header-text-shadow: none !important;
+  --elevation-stroke: 0 0 0 1px var(--black-dots-border) !important;
+  --elevation-low: 0 1px 6px rgba(0, 0, 0, 0.55) !important;
+  --elevation-medium: 0 4px 16px rgba(0, 0, 0, 0.65) !important;
+  --elevation-high: 0 8px 28px rgba(0, 0, 0, 0.75) !important;
+
+  /* Visual Refresh / newer semantic surfaces */
+  --bg-base-primary: var(--black-dots-bg-soft) !important;
+  --bg-base-secondary: var(--black-dots-bg-soft) !important;
+  --bg-base-tertiary: var(--black-dots-bg-soft) !important;
+  --bg-base-primary-hover: var(--black-dots-hover) !important;
+  --bg-surface-overlay: #000 !important;
+  --bg-surface-overlay-app-frame: transparent !important;
+  --bg-surface-raised: rgba(0, 0, 0, 0.28) !important;
+  --bg-surface-sunken: transparent !important;
+  --bg-overlay-1: var(--black-dots-bg-soft) !important;
+  --bg-overlay-2: var(--black-dots-bg-soft) !important;
+  --bg-overlay-3: var(--black-dots-bg-soft) !important;
+  --bg-overlay-4: transparent !important;
+  --bg-overlay-5: transparent !important;
+  --bg-overlay-6: transparent !important;
+  --bg-overlay-chat: transparent !important;
+  --bg-overlay-app-frame: transparent !important;
+  --bg-overlay-floating: #000 !important;
+  --bg-mod-faint: var(--black-dots-hover) !important;
+  --bg-mod-subtle: var(--black-dots-selected) !important;
+  --bg-mod-strong: rgba(255, 255, 255, 0.16) !important;
+  --bg-brand: #fff !important;
+
+  --background-base-lowest: transparent !important;
+  --background-base-lower: transparent !important;
+  --background-base-low: var(--black-dots-bg-soft) !important;
+  --background-base-mid: var(--black-dots-bg-soft) !important;
+  --background-base-high: rgba(0, 0, 0, 0.28) !important;
+  --background-base-highest: rgba(0, 0, 0, 0.28) !important;
+  --background-surface-low: transparent !important;
+  --background-surface-high: rgba(0, 0, 0, 0.28) !important;
+  --background-surface-higher: rgba(0, 0, 0, 0.28) !important;
+  --background-surface-highest: rgba(0, 0, 0, 0.28) !important;
+  --background-card-low: rgba(0, 0, 0, 0.28) !important;
+  --background-card-mid: rgba(0, 0, 0, 0.28) !important;
+  --background-card-high: rgba(0, 0, 0, 0.28) !important;
+  --card-primary-bg: rgba(0, 0, 0, 0.28) !important;
+  --card-secondary-bg: rgba(0, 0, 0, 0.28) !important;
+  --card-gradient-bg: transparent !important;
+  --__header-bar-background: transparent !important;
+  --panel-bg: var(--black-dots-bg-soft) !important;
+  --app-background: transparent !important;
+  --app-background-frame: transparent !important;
+  --sidebar-background: transparent !important;
+  --user-panel-bg: var(--black-dots-bg-soft) !important;
+
+  /* Scrollbars */
+  --scrollbar-auto-background: transparent !important;
+  --scrollbar-auto-track: transparent !important;
+  --scrollbar-auto-thumb: #4a4a4a !important;
+  --scrollbar-auto-scrollbar-color-thumb: #4a4a4a !important;
+  --scrollbar-auto-scrollbar-color-track: transparent !important;
+  --scrollbar-thin-track: transparent !important;
+  --scrollbar-thin-thumb: #555 !important;
+
+  /* Text + icons — keep readable, mentions/unread stay visible */
+  --header-primary: #fff !important;
+  --header-secondary: #cfcfcf !important;
+  --text-normal: var(--black-dots-text) !important;
+  --text-muted: var(--black-dots-muted) !important;
+  --text-link: var(--black-dots-link) !important;
+  --text-positive: #3ba55d !important;
+  --text-warning: #faa81a !important;
+  --text-danger: #ed4245 !important;
+  --text-brand: #fff !important;
+  --text-default: var(--black-dots-text) !important;
+  --text-secondary: #d0d0d0 !important;
+  --text-tertiary: var(--black-dots-muted) !important;
+  --text-primary: #fff !important;
+  --text-feedback-positive: #3ba55d !important;
+  --text-feedback-warning: #faa81a !important;
+  --text-feedback-critical: #ed4245 !important;
+  --channels-default: #c8c8c8 !important;
+  --channel-icon: #c8c8c8 !important;
+  --channel-text-area-placeholder: #8a8a8a !important;
+  --interactive-normal: #d6d6d6 !important;
+  --interactive-hover: #fff !important;
+  --interactive-active: #fff !important;
+  --interactive-muted: #7a7a7a !important;
+  --icon-primary: #fff !important;
+  --icon-secondary: #d0d0d0 !important;
+  --icon-tertiary: #aeaeae !important;
+  --icon-default: #e8e8e8 !important;
+
+  /* Mentions, unread, status — do not flatten these to black */
+  --mention-foreground: #fff !important;
+  --mention-background: rgba(255, 255, 255, 0.14) !important;
+  --info-warning-foreground: #faa81a !important;
+  --info-danger-foreground: #ed4245 !important;
+  --info-help-foreground: #b7ddff !important;
+  --status-danger: #ed4245 !important;
+  --status-warning: #faa81a !important;
+  --status-positive: #3ba55d !important;
+  --green-360: #3ba55d !important;
+  --red-400: #ed4245 !important;
+  --yellow-300: #faa81a !important;
+
+  /* Brand / selected states: white so they stay visible on black */
+  --brand-100: #fff !important;
+  --brand-260: #f3f3f3 !important;
+  --brand-360: #ececec !important;
+  --brand-430: #e4e4e4 !important;
+  --brand-500: #fff !important;
+  --brand-530: #f0f0f0 !important;
+  --brand-560: #e8e8e8 !important;
+  --brand-600: #dedede !important;
+  --brand-experiment: #fff !important;
+  --brand-experiment-200: #f5f5f5 !important;
+  --brand-experiment-500: #fff !important;
+  --brand-experiment-560: #e8e8e8 !important;
+  --control-brand-foreground: #000 !important;
+  --control-brand-foreground-new: #000 !important;
+  --button-filled-brand-background: #fff !important;
+  --button-filled-brand-text: #000 !important;
+  --button-filled-brand-background-hover: #e8e8e8 !important;
+  --button-secondary-background: rgba(255, 255, 255, 0.08) !important;
+  --button-secondary-text: #fff !important;
+  --button-outline-brand-border: #fff !important;
+  --button-outline-brand-text: #fff !important;
+
+  --border-subtle: var(--black-dots-border) !important;
+  --border-strong: rgba(255, 255, 255, 0.28) !important;
+  --border-faint: rgba(255, 255, 255, 0.10) !important;
+  --border-normal: var(--black-dots-border) !important;
+}
+
+/* Older palettes used as chrome (keep mid greys as text, darks as black) */
+.theme-dark,
+.theme-light,
+.visual-refresh {
+  --primary-600: transparent !important;
+  --primary-630: transparent !important;
+  --primary-660: transparent !important;
+  --primary-700: transparent !important;
+  --primary-730: transparent !important;
+  --primary-760: transparent !important;
+  --primary-800: transparent !important;
+  --primary-830: transparent !important;
+  --primary-860: transparent !important;
+  --primary-900: transparent !important;
+}
+
+/* ── Structural surfaces: let the dots show through, keep chrome usable ── */
+.theme-dark [class*="bg__"],
+.theme-light [class*="bg__"],
+.theme-dark [class*="app_"],
+.theme-dark [class*="layers_"],
+.theme-dark [class*="layer_"],
+.theme-dark [class*="base_"],
+.theme-dark [class*="content_"][class*="base"],
+.theme-dark [class*="sidebar_"],
+.theme-dark [class*="guilds_"],
+.theme-dark [class*="scroller_"][class*="none"],
+.theme-dark [class*="chat_"],
+.theme-dark [class*="chatContent_"],
+.theme-dark [class*="messagesWrapper_"],
+.theme-dark [class*="messageListItem_"],
+.theme-dark [class*="content_"][class*="container"],
+.theme-dark [class*="container_"][class*="title"],
+.theme-dark [class*="subtitleContainer_"],
+.theme-dark [class*="children_"][class*="container"],
+.theme-dark [class*="tabBody_"],
+.theme-dark [class*="page_"],
+.theme-dark [class*="homeWrapper_"],
+.theme-dark [class*="privateChannels_"],
+.theme-dark [class*="panels_"],
+.theme-dark [class*="panel_"],
+.theme-dark [class*="membersWrap_"],
+.theme-dark [class*="members_"],
+.theme-dark [class*="member_"],
+.theme-dark [class*="nowPlayingColumn_"],
+.theme-dark [class*="container_"][class*="members"],
+.theme-dark [class*="channelTextArea_"],
+.theme-dark [class*="scrollableContainer_"],
+.theme-dark [class*="wrapper_"][class*="textArea"],
+.theme-dark [class*="form_"],
+.theme-dark [class*="typing_"],
+.theme-dark [class*="bar_"][class*="newMessages"],
+.theme-dark [class*="wrapper_"][class*="channel"],
+.theme-dark nav,
+.theme-dark aside,
+.theme-dark [class*="standardSidebarView_"],
+.theme-dark [class*="sidebarRegion_"],
+.theme-dark [class*="contentRegion_"],
+.theme-dark [class*="contentRegionScroller_"],
+.theme-dark [class*="contentColumn_"],
+.theme-dark [class*="notice_"] {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Title / header bars stay lightly tinted so controls remain readable */
+.theme-dark [class*="titleBar_"],
+.theme-dark [class*="title_"][class*="container"],
+.theme-dark [class*="header_"][class*="container"],
+.theme-dark [class*="searchBar_"],
+.theme-dark [class*="search_"][class*="container"] {
+  background-color: rgba(0, 0, 0, 0.45) !important;
+  background-image: none !important;
+}
+
+/* Message input, popouts, menus, and modals: solid black so they stay distinct */
+.theme-dark [class*="inner_"][class*="channelTextArea"],
+.theme-dark [class*="attachButton_"],
+div[class*="popout_"],
+div[class*="layer_"] div[class*="messagesPopout_"],
+div[class*="autocomplete_"],
+div[class*="autocompletePopout_"],
+div[role="listbox"],
+div[role="menu"],
+div[class*="menu_"],
+div[class*="submenu_"],
+div[class*="colorPicker_"],
+div[class*="tooltip_"],
+div[class*="contentWrapper_"][class*="gif"],
+div[class*="emojiPicker_"],
+div[class*="drawerSizingWrapper_"],
+div[class*="fullSize_"][class*="imageModal"],
+div[class*="root_"][class*="modal"],
+div[role="dialog"],
+[class*="focusLock_"] [class*="root_"],
+[class*="footer_"][class*="modal"],
+[class*="sliderContainer_"],
+[class*="quickswitcher_"],
+[class*="container_"][class*="userPopout"],
+[class*="userProfileInner_"],
+[class*="userProfileOuter_"],
+[class*="overlayBackground_"],
+[class*="profileGradient_"],
+[class*="wrapper_"][class*="contextMenu"] {
+  background-color: #000 !important;
+  background-image: none !important;
+  border-color: var(--black-dots-border, rgba(255, 255, 255, 0.16)) !important;
+}
+
+/* Inputs and textareas inside dialogs stay black with a light edge */
+input,
+textarea,
+select,
+[class*="input_"],
+[class*="inputDefault_"],
+[class*="copyInput_"],
+[class*="multiInput_"] {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* Links */
+a,
+a:link {
+  color: var(--black-dots-link, #b7ddff);
+}
+a:hover {
+  color: #fff;
+}
+
+/* Mentions and unread — keep them clearly visible */
+[class*="mentioned_"],
+[class*="mention_"][class*="wrapper"] {
+  background-color: rgba(255, 255, 255, 0.10) !important;
+  box-shadow: inset 2px 0 0 #fff !important;
+}
+[class*="unread_"]:not([class*="bar_"]),
+[class*="unreadPill_"],
+[class*="numberBadge_"],
+[class*="mention_"][class*="badge"],
+span[class*="mentionsBar_"] {
+  background-color: #fff !important;
+  color: #000 !important;
+  border-color: #fff !important;
+}
+[class*="unreadMentionsIndicator_"],
+[class*="unreadMentionsBar_"],
+[class*="bar_"][class*="mentions"] {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+[class*="unread_"][class*="pill"],
+[class*="unreadBottom_"],
+[class*="newMessagesBar_"] {
+  background-color: #fff !important;
+  color: #000 !important;
+}
+
+/* Selected channel / nav item */
+[class*="modeSelected_"] > [class*="link_"],
+[class*="modeSelected_"] [class*="name_"],
+[class*="selected_"][class*="channel_"],
+[class*="selected_"][class*="linkButton_"],
+[class*="interactiveSelected_"] {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  color: #fff !important;
+}
+
+/* Buttons stay visible: filled = white, outline = white border */
+[class*="lookFilled_"][class*="colorBrand_"],
+[class*="lookFilled_"][class*="colorGreen_"][class*="button"] {
+  background-color: #fff !important;
+  color: #000 !important;
+  border-color: #fff !important;
+}
+[class*="lookFilled_"][class*="colorBrand_"]:hover {
+  background-color: #e8e8e8 !important;
+  color: #000 !important;
+}
+[class*="lookOutlined_"],
+[class*="lookBlank_"][class*="colorBrand_"] {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #fff !important;
+}
+[class*="lookLink_"] {
+  color: #fff !important;
+}
+
+/* Icons and typography should not be forced black */
+svg[class*="icon_"],
+[class*="icon_"] svg {
+  color: inherit;
+}
+
+/* Code blocks readable on black */
+code,
+pre,
+[class*="markup_"] code,
+[class*="hljs"],
+[class*="codeBlockText_"],
+[class*="after_"][class*="inline"] {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  color: #f2f2f2 !important;
+}
+
+/* Don't punch holes in media, avatars, emoji, or stickers */
+img,
+video,
+canvas,
+[class*="avatar_"],
+[class*="avatarStack_"],
+[class*="emoji"],
+[class*="sticker_"],
+[class*="embed_"] img,
+[class*="imageWrapper_"],
+[class*="mediaAttachments_"],
+[class*="spoilerContent_"] {
+  background-image: none;
+}
+
+/* Settings / layers already covered; ensure the overlay backdrop is dark */
+[class*="backdrop_"],
+[class*="backdropWithLayer_"] {
+  background-color: rgba(0, 0, 0, 0.72) !important;
+}
+
+/* A light hairline between major panes, without covering the dots */
+[class*="sidebar_"],
+[class*="guilds_"],
+[class*="membersWrap_"],
+[class*="nowPlayingColumn_"],
+[class*="panels_"] {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* ── Direct messages, group DMs, and Friends/Home — same moving field ── */
+.theme-dark [class*="privateChannels_"],
+.theme-dark [class*="privateChannel_"],
+.theme-dark [class*="privateChannelsHeaderContainer_"],
+.theme-dark [class*="privateChannelsHeader_"],
+.theme-dark [class*="searchBar_"],
+.theme-dark [class*="searchBarComponent_"],
+.theme-dark [class*="dmIcon_"],
+.theme-dark [class*="peopleColumn_"],
+.theme-dark [class*="peopleList_"],
+.theme-dark [class*="peopleListItem_"],
+.theme-dark [class*="tabBody_"],
+.theme-dark [class*="homeWrapper_"],
+.theme-dark [class*="nowPlayingColumn_"],
+.theme-dark [class*="container_"][class*="friends"],
+.theme-dark [class*="container_"][class*="nowPlaying"],
+.theme-dark [class*="activityFeed_"],
+.theme-dark [class*="itemCard_"],
+.theme-dark [class*="emptyState_"],
+.theme-dark [class*="empty_"][class*="page"],
+.theme-dark [class*="pageWrapper_"],
+.theme-dark [class*="page_"],
+.theme-dark [class*="scroller_"][class*="list"],
+.theme-dark [class*="scrollerBase_"],
+.theme-dark [class*="auto_"][class*="scroller"],
+.theme-dark [class*="thin_"][class*="scroller"],
+.theme-dark [class*="layout_"][class*="wrapper"],
+.theme-dark [class*="chat_"][class*="group"],
+.theme-dark [class*="chatContent_"],
+.theme-dark [class*="messagesWrapper_"],
+.theme-dark [class*="messageContent_"],
+.theme-dark [class*="content_"][class*="page"],
+.theme-dark [class*="sidebarList_"],
+.theme-dark [class*="sidebar_"][class*="list"],
+.theme-dark a[href^="/channels/@me"],
+.theme-dark a[href*="/@me/"],
+.theme-dark [class*="channel_"][href^="/channels/@me"],
+.theme-dark [class*="link_"][href^="/channels/@me"],
+.theme-dark [class*="name_"][class*="overflow"],
+.theme-dark [class*="interactive_"][class*="channel"] {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Friends header / DM section titles stay lightly tinted, not opaque */
+.theme-dark [class*="privateChannels_"] [class*="headerText_"],
+.theme-dark [class*="privateChannels_"] [class*="container_"],
+.theme-dark [class*="tabBar_"],
+.theme-dark [class*="topBar_"],
+.theme-dark [class*="title_"][class*="container"],
+.theme-dark [class*="children_"][class*="container"] {
+  background-color: transparent !important;
+  background-image: none !important;
+}

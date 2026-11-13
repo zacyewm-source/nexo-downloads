@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <title>نَغَم — تشغيل صوت الفيديو على المايك</title>
+  <link rel="icon" type="image/x-icon" href="icons/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <style>
+    @font-face {
+      font-family: "CairoLocal";
+      src: url("fonts/Cairo.woff") format("woff"), url("fonts/Cairo.ttf") format("truetype");
+      font-weight: 200 900; font-display: swap;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; color: #fff;
+      font-family: "CairoLocal", "Cairo", "Segoe UI", Tahoma, "Noto Naskh Arabic", Arial, sans-serif; }
+    body {
+      min-height: 100vh;
+      background-color: #000;
+    }
+    #dots { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+    .wrap { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; padding: 48px 20px 80px; text-align: center; }
+    .logo { width: min(180px, 55vw); height: auto; border-radius: 0; border: 0; margin: 0 auto 18px; display: block; background: transparent; }
+    h1 { font-size: clamp(2.4rem, 8vw, 3.6rem); font-weight: 800; margin: 6px 0 10px; }
+    .lead { color: #cfcfcf; font-size: 1.12rem; line-height: 1.95; margin: 0 auto 28px; max-width: 36rem; text-align: right; }
+    .btn {
+      display: inline-block; text-decoration: none; color: #000; font-weight: 800; font-size: 1.25rem;
+      background: #fff; border: 1px solid #fff; border-radius: 18px; padding: 18px 30px;
+    }
+    .btn:hover { background: #eaeaea; }
+    .size { margin: 12px 0 36px; color: #ddd; font-weight: 700; }
+    .card {
+      background: rgba(0,0,0,.84); border: 1px solid rgba(255,255,255,.22);
+      border-radius: 18px; padding: 20px 22px; margin: 16px 0; text-align: right;
+    }
+    .card h2 { margin: 0 0 10px; font-size: 1.15rem; }
+    .card ol, .card p { margin: 0; color: #d0d0d0; line-height: 1.9; }
+    .card ol { padding-inline-start: 1.3rem; }
+    .foot { margin-top: 28px; color: #9a9a9a; font-size: .92rem; }
+    .foot a { color: #fff; }
+  </style>
+</head>
+<body>
+  <canvas id="dots" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <img class="logo" src="icons/logo-1024.png" alt="نَغَم">
+    <h1>نَغَم</h1>
+    <p class="lead">الصق رابط يوتيوب أو أي فيديو، أو اختر ملفاً من جهازك، واضغط تشغيل. البرنامج يستخرج الصوت ويطلّعه على المايك الافتراضي، فيسمعه اللي معك في روم ديسكورد وأنت داخل الروم الصوتي.</p>
+    <a class="btn" href="https://github.com/zacyewm-source/nexo-downloads/releases/download/v1.0.0/Nagham-Setup-1.0.0.exe">تحميل لويندوز</a>
+    <div class="size" id="size">مثبت ويندوز — حوالي 85 ميغابايت</div>
+    <div class="card">
+      <h2>طريقة الاستخدام</h2>
+      <ol>
+        <li>ثبّت البرنامج وشغّله.</li>
+        <li>إذا طُلب منك، ثبّت الكيبل الافتراضي VB-CABLE (من الموقع الرسمي) ثم أعد تشغيل الجهاز.</li>
+        <li>من نَغَم اختر «مايك ديسكورد»: CABLE Output، ونفس المايك اختره في ديسكورد. نَغَم يوجّه الصوت تلقائياً.</li>
+        <li>ادخل الروم الصوتي، الصق رابط الفيديو أو اضغط «اختيار ملف» لملف عندك، واضغط تشغيل. تقدر تضغط «حفظ» عشان الرابط يبقى عندك وتشغّله في أي وقت.</li>
+        <li>ارفع شريط «الصدى» كل ما تبيه أقوى، وفعّل «تكرار» إذا تبغى المقطع يعيد نفسه.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <p>الصوت لا يطلع على سماعاتك، بل يروح للكيبل الافتراضي فقط. لذلك يسمعه الآخرون في ديسكورد عندما تكون داخل روم صوتي.</p>
+    </div>
+    <div class="foot">من <a href="../">Nexo</a> — للاستخدام الشخصي. جرب أيضاً <a href="../ghuraf/">غرف</a>.</div>
+  </div>
+
+  <script>
+    (function animateDots() {
+      const canvas = document.getElementById("dots");
+      if (!canvas) return;
+      const c = canvas.getContext("2d");
+      let w = 0, h = 0, dots = [];
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      function resize() {
+        w = canvas.width = Math.floor(window.innerWidth * dpr);
+        h = canvas.height = Math.floor(window.innerHeight * dpr);
+        canvas.style.width = window.innerWidth + "px";
+        canvas.style.height = window.innerHeight + "px";
+        const n = Math.round((window.innerWidth * window.innerHeight) / 13000);
+        const count = Math.max(48, Math.min(140, n));
+        dots = [];
+        for (let i = 0; i < count; i++) {
+          dots.push({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            r: (0.9 + Math.random() * 1.7) * dpr,
+            vx: (Math.random() - 0.5) * 0.42 * dpr,
+            vy: (Math.random() - 0.45) * 0.42 * dpr,
+            a: 0.4 + Math.random() * 0.6
+          });
+        }
+      }
+      function tick() {
+        if (!document.hidden) {
+          c.clearRect(0, 0, w, h);
+          c.fillStyle = "#fff";
+          for (const d of dots) {
+            d.x += d.vx; d.y += d.vy;
+            if (d.x < -10) d.x = w + 10;
+            else if (d.x > w + 10) d.x = -10;
+            if (d.y < -10) d.y = h + 10;
+            else if (d.y > h + 10) d.y = -10;
+            c.globalAlpha = d.a;
+            c.beginPath();
+            c.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+            c.fill();
+          }
+          c.globalAlpha = 1;
+        }
+        requestAnimationFrame(tick);
+      }
+      window.addEventListener("resize", resize);
+      resize();
+      requestAnimationFrame(tick);
+    })();
+  </script>
+</body>
+
+</html>
+
